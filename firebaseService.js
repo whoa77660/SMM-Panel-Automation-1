@@ -6,6 +6,58 @@ const path = require('path');
 let db = null;
 let isInitialized = false;
 
+// ============ CUSTOM .env READER (supports multi-line JSON values) ============
+function readEnvFile() {
+    const envPath = path.join(__dirname, '.env');
+    if (!fs.existsSync(envPath)) return {};
+
+    const raw = fs.readFileSync(envPath, 'utf8');
+    const lines = raw.split(/\r?\n/);
+    const result = {};
+
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i].trim();
+
+        // Skip blanks and comments
+        if (!line || line.startsWith('#')) { i++; continue; }
+
+        const eqIdx = line.indexOf('=');
+        if (eqIdx === -1) { i++; continue; }
+
+        const key = line.slice(0, eqIdx).trim();
+        let value = line.slice(eqIdx + 1).trim();
+
+        // Detect start of a multi-line JSON block: value starts with { but isn't closed yet
+        // In the user's .env it starts with '{ so we strip quotes first
+        if (value.startsWith("'") && !value.endsWith("'")) value = value.slice(1);
+        
+        if (value.startsWith('{')) {
+            let jsonLines = [value];
+            let depth = (value.match(/\{/g) || []).length - (value.match(/\}/g) || []).length;
+
+            while (depth > 0 && i + 1 < lines.length) {
+                i++;
+                const nextLine = lines[i];
+                jsonLines.push(nextLine);
+                depth += (nextLine.match(/\{/g) || []).length;
+                depth -= (nextLine.match(/\}/g) || []).length;
+            }
+            value = jsonLines.join('\n');
+            // Remove trailing single quote if it exists
+            if (value.endsWith("'")) value = value.slice(0, -1);
+        } else if (value.startsWith("'") && value.endsWith("'")) {
+            value = value.slice(1, -1);
+        } else if (value.startsWith('"') && value.endsWith('"')) {
+            value = value.slice(1, -1);
+        }
+
+        result[key] = value;
+        i++;
+    }
+    return result;
+}
+
 async function initializeFirebase() {
     if (isInitialized && db) {
         return db;
@@ -14,8 +66,50 @@ async function initializeFirebase() {
     try {
         require('dotenv').config();
         
-        const serviceAccount = require('./serviceAccountKey.json');
-        console.log('🔑 Firebase credentials loaded from serviceAccountKey.json');
+        // Also load our custom reader (picks up multi-line FIREBASE_SERVICE_ACCOUNT)
+        const envVars = readEnvFile();
+
+        let serviceAccount;
+
+        // Try getting full JSON from custom environment variable reader first
+        const raw = envVars.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (raw) {
+            try {
+                serviceAccount = JSON.parse(raw);
+                console.log('🔑 Firebase credentials loaded from FIREBASE_SERVICE_ACCOUNT env var');
+            } catch (e) {
+                console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT from .env:', e.message);
+                throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON.');
+            }
+        }
+        // Fallback: Try getting individual credentials from environment variables
+        else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+            let privateKey = process.env.FIREBASE_PRIVATE_KEY.trim();
+            // Handle escaped newlines from .env or Render dashboard
+            if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+                (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+                privateKey = privateKey.slice(1, -1);
+            }
+            if (!privateKey.includes('\n')) {
+                privateKey = privateKey.replace(/\\n/g, '\n');
+            }
+            
+            serviceAccount = {
+                type: 'service_account',
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                privateKey: privateKey
+            };
+            console.log('🔑 Firebase credentials loaded from individual env vars');
+        } else {
+            // Fallback to serviceAccountKey.json file
+            try {
+                serviceAccount = require('./serviceAccountKey.json');
+                console.log('🔑 Firebase credentials loaded from serviceAccountKey.json');
+            } catch (e) {
+                throw new Error('Could not find serviceAccountKey.json and env variables are not set.');
+            }
+        }
 
         const databaseURL = process.env.DATABASE;
         if (!databaseURL) {
