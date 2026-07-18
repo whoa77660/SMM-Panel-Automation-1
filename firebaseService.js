@@ -14,47 +14,12 @@ async function initializeFirebase() {
     try {
         require('dotenv').config();
         
-        let serviceAccount;
-        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-            try {
-                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-            } catch (e) {
-                throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON string from environment');
-            }
-        } else if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PROJECT_ID) {
-            let privateKey = process.env.FIREBASE_PRIVATE_KEY.trim();
-
-            // Strip surrounding quotes added by some env editors or shells
-            if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
-                (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
-                privateKey = privateKey.slice(1, -1);
-            }
-
-            // Normalize all variants of escaped newlines to real newlines
-            // Handles: \\n (double-escaped), \n (literal backslash-n), and already-real newlines
-            if (!privateKey.includes('\n')) {
-                privateKey = privateKey.replace(/\\n/g, '\n');
-            }
-
-            serviceAccount = {
-                type: 'service_account',
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: privateKey
-            };
-        } else {
-            const serviceAccountPath = path.join(__dirname, 'Service-account.json');
-            if (fs.existsSync(serviceAccountPath)) {
-                serviceAccount = require(serviceAccountPath);
-            } else {
-                throw new Error('Firebase credentials not found in environment or Service-account.json');
-            }
-        }
+        const serviceAccount = require('./serviceAccountKey.json');
+        console.log('🔑 Firebase credentials loaded from serviceAccountKey.json');
 
         const databaseURL = process.env.DATABASE;
-
         if (!databaseURL) {
-            throw new Error('DATABASE URL not found in .env file');
+            throw new Error('DATABASE env var not set in .env');
         }
 
         admin.initializeApp({
