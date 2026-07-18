@@ -1,0 +1,297 @@
+<!-- views/admin.ejs - COMPLETE WITH COPY USER KEY -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SMM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: all 0.3s ease; }
+        
+        body.light { background: linear-gradient(135deg, #eef2ff 0%, #e2e8f0 100%); }
+        body.light .card { background: #ffffff; color: #1e293b; }
+        body.light .user-item { background: #f8fafc; border-left-color: #667eea; }
+        body.light .secret-key { background: #e9ecef; color: #1e293b; }
+        body.light .form-control, body.light .form-select { background: #ffffff; border-color: #e2e8f0; color: #1e293b; }
+        body.light .text-muted { color: #64748b !important; }
+        body.light .section-title { color: #1e293b; border-left-color: #667eea; }
+        body.light hr { border-color: #e2e8f0; }
+
+        body.dark { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
+        body.dark .card { background: #1e293b; color: #f1f5f9; }
+        body.dark .card-header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important; }
+        body.dark .user-item { background: #334155; border-left-color: #a78bfa; color: #f1f5f9; }
+        body.dark .user-item strong { color: #ffffff; }
+        body.dark .secret-key { background: #1e293b; color: #f1f5f9; border: 1px solid #475569; }
+        body.dark .form-control, body.dark .form-select { background: #334155; border-color: #475569; color: #f1f5f9; }
+        body.dark .form-control::placeholder { color: #94a3b8; }
+        body.dark .text-muted { color: #94a3b8 !important; }
+        body.dark .section-title { color: #f1f5f9; border-left-color: #a78bfa; }
+        body.dark hr { border-color: #334155; }
+        body.dark .stat-box { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+        body.dark .btn-light { background: #475569; border-color: #64748b; color: #f1f5f9; }
+        body.dark .btn-light:hover { background: #64748b; color: white; }
+        body.dark label, body.dark .fw-semibold { color: #e2e8f0; }
+
+        .admin-container { max-width: 900px; margin: 0 auto; }
+        .card { border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); margin-bottom: 20px; overflow: hidden; }
+        .card-header { color: white; padding: 20px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-body { padding: 24px; }
+        .btn-gradient { border: none; border-radius: 12px; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); color: white; font-weight: 700; padding: 10px 20px; cursor: pointer; transition: transform 0.25s ease; }
+        .btn-gradient:hover { transform: translateY(-2px); }
+        .btn-copy { border-radius: 8px; background: #6366f1; color: white; border: none; padding: 6px 12px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+        .btn-copy:hover { background: #4f46e5; transform: scale(1.05); }
+        .btn-copied { background: #10b981 !important; }
+        .user-item { border-radius: 16px; padding: 18px; margin-bottom: 14px; border-left: 4px solid; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.3s ease; }
+        .user-item:hover { transform: translateX(4px); }
+        .secret-key { font-family: monospace; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 6px; }
+        .stat-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; text-align: center; color: white; }
+        .stat-number { font-size: 32px; font-weight: bold; }
+        .stat-label { font-size: 14px; opacity: 0.9; }
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; border-left: 4px solid #667eea; padding-left: 12px; }
+        .badge-available { background: #059669; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-admin { background: #d97706; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-user { background: #4f46e5; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-info { background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; }
+        .toast-msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 40px; font-size: 14px; z-index: 10001; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .theme-toggle { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; }
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+        .d-flex { display: flex; } .justify-content-between { justify-content: space-between; } .align-items-center { align-items: center; } .align-items-start { align-items: flex-start; }
+        .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .flex-wrap { flex-wrap: wrap; }
+        .mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 20px; }
+        .me-1 { margin-right: 4px; } .me-2 { margin-right: 8px; } .ms-2 { margin-left: 8px; }
+        .w-100 { width: 100%; } .text-muted { font-size: 12px; } .small { font-size: 12px; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 10px; }
+        .form-control, .form-select { border-radius: 12px; padding: 10px 14px; border: 1px solid; }
+        hr { margin: 24px 0; opacity: 0.3; }
+        .row { display: flex; flex-wrap: wrap; margin: 0 -8px; }
+        .col-md-3, .col-md-4, .col-md-5, .col-md-6 { padding: 0 8px; }
+        .col-md-3 { width: 25%; } .col-md-4 { width: 33.33%; } .col-md-5 { width: 41.66%; } .col-md-6 { width: 50%; }
+        @media (max-width: 768px) { .col-md-3, .col-md-4, .col-md-5, .col-md-6 { width: 100%; } }
+    </style>
+</head>
+<body>
+<div class="admin-container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div><h4><i class="fas fa-crown me-2"></i>Admin Panel</h4></div>
+            <div class="d-flex gap-2 align-items-center">
+                <button class="theme-toggle" onclick="toggleTheme()"><i id="themeIcon" class="fas fa-moon"></i></button>
+                <button class="btn btn-sm btn-light" onclick="window.location.href='/'"><i class="fas fa-home me-1"></i>Home</button>
+                <button class="btn btn-sm btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i>Logout</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6"><div class="stat-box"><div class="stat-number" id="totalUsers">0</div><div class="stat-label"><i class="fas fa-users me-1"></i>Total Users</div></div></div>
+                <div class="col-md-6"><div class="stat-box"><div class="stat-number" id="totalKeys">0</div><div class="stat-label"><i class="fas fa-key me-1"></i>Available Keys</div></div></div>
+            </div>
+
+            <div class="mb-4">
+                <div class="section-title"><i class="fas fa-dollar-sign me-2"></i>Currency Settings</div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6"><label class="fw-semibold mb-1">USD to BDT Rate</label><input type="number" step="0.01" id="usdRateInput" class="form-control" value="<%= usd_to_bdt_rate %>"></div>
+                    <div class="col-md-3"><button class="btn-gradient w-100" onclick="updateUsdRate()"><i class="fas fa-save me-1"></i>Save</button></div>
+                </div>
+            </div>
+            <hr>
+
+            <div class="mb-4">
+                <div class="section-title"><i class="fas fa-key me-2"></i>Registration Keys</div>
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-5"><input type="text" id="newSecretKey" class="form-control" placeholder="Custom key (optional)"></div>
+                    <div class="col-md-4"><select id="newKeyRole" class="form-select"><option value="user">👤 Normal User</option><option value="admin">👑 Admin User</option></select></div>
+                    <div class="col-md-3"><button class="btn-gradient w-100" onclick="createKey()"><i class="fas fa-plus-circle me-1"></i>Create Key</button></div>
+                </div>
+                <div id="keysList"><div class="text-center py-3 text-muted">Loading...</div></div>
+            </div>
+            <hr>
+
+            <div class="mb-4">
+                <div class="section-title"><i class="fas fa-users me-2"></i>Registered Users</div>
+                <div id="usersList"><div class="text-center py-3 text-muted">Loading...</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="toastMsg" class="toast-msg"></div>
+
+<script>
+let currentUserId = <%- JSON.stringify(current_user_id) %>;
+
+function showToast(msg) { const t=document.getElementById('toastMsg'); t.innerText=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+function escapeHtml(t) { if(!t)return''; const e=document.createElement('div'); e.textContent=t; return e.innerHTML; }
+
+function applyTheme() { const s=localStorage.getItem('theme'); if(s==='dark'){ document.body.classList.add('dark'); document.body.classList.remove('light'); document.getElementById('themeIcon').className='fas fa-sun'; }else{ document.body.classList.add('light'); document.body.classList.remove('dark'); document.getElementById('themeIcon').className='fas fa-moon'; } }
+function toggleTheme() { if(document.body.classList.contains('dark')){ document.body.classList.remove('dark'); document.body.classList.add('light'); localStorage.setItem('theme','light'); document.getElementById('themeIcon').className='fas fa-moon'; }else{ document.body.classList.remove('light'); document.body.classList.add('dark'); localStorage.setItem('theme','dark'); document.getElementById('themeIcon').className='fas fa-sun'; } }
+
+// ✅ FIXED API URLs
+async function loadUsers() {
+    try {
+        const r=await fetch('/api/admin/get_users'), users=await r.json();
+        document.getElementById('totalUsers').innerText=users.length;
+        const c=document.getElementById('usersList');
+        if(!users.length){ c.innerHTML='<div class="text-center py-3 text-muted">No users found</div>'; return; }
+        let h='';
+        users.forEach(u=>{
+            const isMe=u.id==currentUserId;
+            const isHidden=u.is_hidden||false;
+            const ri=u.is_admin?'<i class="fas fa-crown text-warning me-1"></i>':'<i class="fas fa-user me-1"></i>';
+            let skd=escapeHtml(u.secret_key||'N/A');
+            let joinDate='Unknown';
+            try{if(u.created_at)joinDate=new Date(u.created_at).toLocaleString();}catch(e){}
+            
+            h+=`<div class="user-item">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div style="flex:1;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            ${ri}<strong>${escapeHtml(u.username)}</strong>
+                            ${u.is_admin?'<span class="badge-admin">Admin</span>':'<span class="badge-user">User</span>'}
+                            ${isMe?'<span class="badge-info">You</span>':''}
+                        </div>
+                        <div class="small text-muted">
+                            <i class="fas fa-key me-1"></i>Secret Key: 
+                            <code class="secret-key">${skd}</code>
+                            ${!isHidden ? `
+                                <button class="btn-copy ms-2" onclick="copyKey('${escapeHtml(u.secret_key||'')}', this)" title="Copy secret key">
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                            ` : `
+                                <span class="badge bg-secondary ms-2" style="font-size:10px;">
+                                    <i class="fas fa-lock me-1"></i>Protected
+                                </span>
+                            `}
+                        </div>
+                        <div class="small text-muted mt-1">
+                            <i class="fas fa-calendar me-1"></i>Joined: ${joinDate}
+                        </div>
+                    </div>
+                    ${!isMe ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.id})"><i class="fas fa-trash-alt me-1"></i>Delete</button>` : ''}
+                </div>
+            </div>`;
+        });
+        c.innerHTML=h;
+    } catch(e){console.error(e);}
+}
+
+async function loadKeys() {
+    try {
+        const r=await fetch('/api/admin/get_registration_keys'), keys=await r.json();
+        const availableKeys=keys.filter(k=>!k.used_by);
+        document.getElementById('totalKeys').innerText=availableKeys.length;
+        const c=document.getElementById('keysList');
+        if(!availableKeys.length){ c.innerHTML='<div class="text-center py-3 text-muted">📭 No available keys. Create one above.</div>'; return; }
+        let h='';
+        availableKeys.forEach(k=>{
+            const rb=k.target_role==='admin'?'<span class="badge-admin">👑 Admin</span>':'<span class="badge-user">👤 User</span>';
+            let createdDate='Unknown';
+            try{if(k.created_at)createdDate=new Date(k.created_at).toLocaleString();}catch(e){}
+            h+=`<div class="user-item">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div style="flex:1;">
+                        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                            <code class="secret-key"><i class="fas fa-key me-1"></i>${escapeHtml(k.secret_key)}</code>
+                            <span class="badge-available"><i class="fas fa-check-circle me-1"></i>Available</span>${rb}
+                        </div>
+                        <div class="small text-muted">
+                            <i class="fas fa-clock me-1"></i>Created: ${createdDate}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn-copy" onclick="copyKey('${escapeHtml(k.secret_key)}', this)" title="Copy key">
+                            <i class="fas fa-copy me-1"></i>Copy
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteKey(${k.id})">
+                            <i class="fas fa-trash-alt me-1"></i>Delete
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        });
+        c.innerHTML=h;
+    } catch(e){console.error(e);}
+}
+
+async function createKey() {
+    const sk=document.getElementById('newSecretKey').value.trim(), tr=document.getElementById('newKeyRole').value;
+    try{
+        const r=await fetch('/api/admin/create_registration_key',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({secret_key:sk||undefined,target_role:tr})
+        });
+        const d=await r.json();
+        if(d.success){
+            showToast('✅ Key created: '+d.secret_key);
+            document.getElementById('newSecretKey').value='';
+            document.getElementById('newKeyRole').value='user';
+            loadKeys();
+        } else {
+            showToast('❌ '+(d.message||'Failed to create key'));
+        }
+    } catch(e){showToast('❌ Error creating key');}
+}
+
+async function deleteKey(id){ 
+    if(!confirm('Delete this key?'))return; 
+    await fetch('/api/admin/delete_registration_key',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({key_id:id})
+    }); 
+    loadKeys(); 
+    showToast('🗑️ Key deleted'); 
+}
+
+async function deleteUser(id){ 
+    if(!confirm('Delete this user? All their data will be permanently lost.'))return; 
+    await fetch('/api/admin/delete_user',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({user_id:id})
+    }); 
+    loadUsers(); 
+    showToast('🗑️ User deleted'); 
+}
+
+async function updateUsdRate(){ 
+    const r=parseFloat(document.getElementById('usdRateInput').value); 
+    if(isNaN(r)||r<=0){showToast('❌ Enter a valid rate');return;}
+    await fetch('/api/admin/set_usd_rate',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({usd_to_bdt_rate:r})
+    }); 
+    showToast('✅ Rate updated!'); 
+}
+
+function copyKey(key, btn) {
+    if(!key){
+        showToast('⚠️ No key to copy');
+        return;
+    }
+    navigator.clipboard.writeText(key).then(() => {
+        // Visual feedback
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        btn.classList.add('btn-copied');
+        showToast('📋 Key copied to clipboard!');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-copied');
+        }, 2000);
+    }).catch(() => {
+        showToast('❌ Failed to copy');
+    });
+}
+
+async function logout(){ await fetch('/logout'); location.href='/'; }
+
+applyTheme(); loadUsers(); loadKeys();
+</script>
+</body>
+</html>
