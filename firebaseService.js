@@ -14,8 +14,28 @@ async function initializeFirebase() {
     try {
         require('dotenv').config();
         
-        const serviceAccountPath = path.join(__dirname, 'Service-account.json');
-        const serviceAccount = require(serviceAccountPath);
+        let serviceAccount;
+        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+            try {
+                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+            } catch (e) {
+                throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON string from environment');
+            }
+        } else if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PROJECT_ID) {
+            serviceAccount = {
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            };
+        } else {
+            const serviceAccountPath = path.join(__dirname, 'Service-account.json');
+            if (fs.existsSync(serviceAccountPath)) {
+                serviceAccount = require(serviceAccountPath);
+            } else {
+                throw new Error('Firebase credentials not found in environment or Service-account.json');
+            }
+        }
+
         const databaseURL = process.env.DATABASE;
 
         if (!databaseURL) {
