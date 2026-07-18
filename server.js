@@ -23,7 +23,7 @@ const MAX_RETRIES = 3;
 const USE_FIREBASE = true; // Set to false to use local JSON files only
 
 const KEEP_ALIVE_URL = process.env.KEEP_ALIVE_URL || process.env.RENDER_URL ||
-    "http://localhost:11958/";
+    "https://smm-panel-automation-1.onrender.com/";
 const KEEP_ALIVE_INTERVAL_MS = 49 * 1000;
 
 async function sendKeepAlivePing() {
