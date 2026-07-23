@@ -15,8 +15,8 @@ const server = http.createServer(app);
 
 // ============ CONFIGURATION ============
 const PORT = process.env.PORT || 11958;
-const API_URL = "https://smmgen.com/api/v2";
-const ADMIN_SECRET = "ADMIN2025";
+const API_URL = "https://my.smmgen.com/api/v2";
+const ADMIN_SECRET = "ADMIN2026";
 const SERVICE_GAP_SECONDS = 2;
 const STATUS_CHECK_COOLDOWN = 5;
 const MAX_RETRIES = 3;
